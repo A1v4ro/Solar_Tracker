@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Solar Tracker</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/chart.min.js"></script>
+    <script src="/luxon.min.js"></script>
+    <script src="/chartjs-adapter-luxon.min.js"></script>
+    <script src="/icons.js"></script>
+    <script src="/script.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Mobile Menu -->
+        <div class="mobile-menu">
+            <div class="mobile-header">
+                <div class="logo">
+                    <span data-icon="microchip"></span>
+                    <span>Solar Tracker</span>
+                </div>
+                <button class="menu-toggle">
+                    <span data-icon="menu"></span>
+                </button>
+            </div>
+            <nav class="mobile-nav">
+                <!-- Se llena dinámicamente -->
+            </nav>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span data-icon="microchip"></span>
+                <span>Solar Tracker</span>
+            </div>
+            <nav class="menu">
+                <ul>
+                    <li class="menu-item active" data-section="config">
+                        <span data-icon="wifi"></span>
+                        <span>Configuraciones</span>
+                    </li>
+                    <li class="menu-item" data-section="control">
+                        <span data-icon="sliders"></span>
+                        <span>Modo de Operación</span>
+                    </li>
+                    <li class="menu-item" data-section="history">
+                        <span data-icon="chartLine"></span>
+                        <span>Historial</span>
+                    </li>
+                </ul>
+            </nav>
+            <div class="system-status">
+                <div class="status-item">
+                    <span class="status-label">Modo:</span>
+                    <span class="status-value" id="system-mode">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Operación:</span>
+                    <span class="status-value" id="operation-type">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Conexión:</span>
+                    <span class="status-value" id="wifi-status">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">IP:</span>
+                    <span class="status-value" id="ip-address">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Red:</span>
+                    <span class="status-value" id="network-ssid">-</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Configuración WiFi -->
+            <section id="config" class="content-section active">
+                <h2><span data-icon="wifi"></span> Configuraciones </h2>
+                <div class="card">
+                    <h3>Configuración WiFi</h3>
+                    <form id="wifi-form" onsubmit="saveWiFiConfig(event)">
+                        <div class="form-group">
+                            <label for="ssid">Nombre de la red (SSID)</label>
+                            <input type="text" id="ssid" name="ssid" placeholder="Ingrese el SSID" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña</label>
+                            <input type="password" id="password" name="password" placeholder="Ingrese la contraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="wifi-submit-btn">
+                            <span data-icon="save"></span> Guardar Configuración
+                        </button>
+                        <div id="wifi-status-message"></div>
+                    </form>
+                </div>
+                <div class="card">
+                    <h3>Configuración de Operación</h3>
+                    <form id="operation-form">
+                        <div class="form-group">
+                            <label for="operation-type-select">Tipo de Operación:</label>
+                            <select id="operation-type-select" class="form-control">
+                                <option value="control">Solo Control</option>
+                                <option value="control-log">Control + Datalogger</option>
+                                <option value="sync">Sincronización</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Formulario para Intervalo de Control (visible en Solo Control y Control + Datalogger) -->
+                        <div id="control-interval-container" class="interval-container">
+                            <h4>Intervalo de Control</h4>
+                            <div class="form-group">
+                                <label for="control-interval-value">Valor</label>
+                                <input type="number" id="control-interval-value" min="1" value="5" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="control-interval-unit">Unidad</label>
+                                <select id="control-interval-unit" class="form-control">
+                                    <option value="seconds">Segundos</option>
+                                    <option value="minutes">Minutos</option>
+                                    <option value="hours" selected>Horas</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulario para Intervalo de Registro (visible en Control + Datalogger y Sincronización) -->
+                        <div id="log-interval-container" class="interval-container">
+                            <h4>Intervalo de Registro</h4>
+                            <div class="form-group">
+                                <label for="log-interval-value">Valor</label>
+                                <input type="number" id="log-interval-value" min="1" value="5" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="log-interval-unit">Unidad</label>
+                                <select id="log-interval-unit" class="form-control">
+                                    <option value="seconds">Segundos</option>
+                                    <option value="minutes">Minutos</option>
+                                    <option value="hours" selected>Horas</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="save-operation-btn" class="btn btn-primary">
+                            <span data-icon="save"></span> Guardar Configuración
+                        </button>
+                        <div id="operation-status-message"></div> 
+                    </form>
+                </div>
+                <!-- Configuracion OTA -->
+                <div class="card">
+                    <h3>Actualización OTA</h3>
+                    <button onclick="window.location.href='/ota'" class="btn btn-warning">
+                        <span data-icon="upload"></span> Ir a Actualización OTA
+                    </button>
+                </div>
+                <!-- Configuracion horaria-->
+                <div class="card">
+                    <h3>Configuración de Fecha y Hora</h3>
+                    <div class="form-group">
+                        <label for="datetime-local">Fecha y Hora Actual (Dispositivo):</label>
+                        <input type="datetime-local" id="datetime-local" class="form-control">
+                    </div>
+                    <button type="button" id="update-time-btn" class="btn btn-primary">
+                        <span data-icon="clock"></span> Sincronizar Hora
+                    </button>
+                    <div id="time-status-message"></div>
+                </div>
+            </section>
+
+            <!-- Control Manual -->
+            <section id="control" class="content-section">
+                <h2><span data-icon="sliders"></span> Modo de Operación</h2>
+                <div class="card">
+                    <div class="form-group">
+                        <label>Modo de Operación</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="operation-mode" value="auto" checked>
+                                <span class="radio-checkmark"></span>
+                                <span class="radio-label">Automático</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="operation-mode" value="manual">
+                                <span class="radio-checkmark"></span>
+                                <span class="radio-label">Manual</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="manual-controls" style="display: none;">
+                        <div class="joystick-controls">
+                            <div class="compact-controls-container">
+                                <div class="vertical-slider-container">
+                                    <label>Velocidad Vertical</label>
+                                    <input type="range" class="vertical-slider" id="vertical-speed" min="0" max="100" value="50" orient="vertical">
+                                    <div class="slider-value" id="vertical-speed-value">50%</div>
+                                </div>
+                                <div class="dpad-container">
+                                    <button class="dpad-btn upleft" data-action="upleft">↖</button>
+                                    <button class="dpad-btn up" data-action="up">↑</button>
+                                    <button class="dpad-btn upright" data-action="upright">↗</button>
+                                    <button class="dpad-btn left" data-action="left">←</button>
+                                    <button class="dpad-btn stop" data-action="stop">STOP</button>
+                                    <button class="dpad-btn right" data-action="right">→</button>
+                                    <button class="dpad-btn downleft" data-action="downleft">↙</button>
+                                    <button class="dpad-btn down" data-action="down">↓</button>
+                                    <button class="dpad-btn downright" data-action="downright">↘</button>
+                                </div>
+                            </div>
+                            <div class="horizontal-slider-container">
+                                <label>Velocidad Horizontal</label>
+                                <input type="range" class="horizontal-slider" id="horizontal-speed" min="0" max="100" value="50">
+                                <div class="slider-value" id="horizontal-speed-value">50%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="offset-controls">
+                        <h3>Configuración de Offset de Motores</h3>
+                        <div class="form-group">
+                            <label for="motor-select">Motor/Dirección:</label>
+                            <select id="motor-select-offset" class="form-control">
+                                <option value="h_right">Horizontal (Derecha)</option>
+                                <option value="h_left">Horizontal (Izquierda)</option>
+                                <option value="v_up">Vertical (Arriba)</option>
+                                <option value="v_down">Vertical (Abajo)</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="motor-zero-checkbox">
+                                <span class="checkbox-checkmark"></span>
+                                <span class="checkbox-label">Eliminar Offset (1%)</span>
+                            </label>
+                        </div>
+                        <button id="save-motor-offset-btn" class="btn btn-primary">
+                            <span data-icon="save"></span> Guardar Offset Actual
+                        </button>
+                        <div id="motor-offset-status-message"></div>
+                        
+                        <div class="current-offsets">
+                            <h4>Offsets Actuales:</h4>
+                            <ul>
+                                <li>Horizontal Derecha: <span id="current-h-right">1</span>%</li>
+                                <li>Horizontal Izquierda: <span id="current-h-left">1</span>%</li>
+                                <li>Vertical Arriba: <span id="current-v-up">1</span>%</li>
+                                <li>Vertical Abajo: <span id="current-v-down">1</span>%</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="offset-controls">
+                        <h3>Configuración de Offset de Sensores</h3>
+                        <div class="form-group">
+                            <label for="sensor-select">Sensor:</label>
+                            <select id="sensor-select-offset" class="form-control">
+                                <option value="azimut">Sensor Azimutal</option>
+                                <option value="cenit">Sensor Cenital</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="sensor-zero-checkbox">
+                                <span class="checkbox-checkmark"></span>
+                                <span class="checkbox-label">Eliminar Offset (0)</span>
+                            </label>
+                        </div>
+                        <button id="save-sensor-offset-btn" class="btn btn-primary">
+                            <span data-icon="save"></span> Guardar Offset Actual del Sensor
+                        </button>
+                        <div id="sensor-offset-status-message"></div>
+                        
+                        <div class="current-offsets">
+                            <h4>Offsets Actuales de Sensores:</h4>
+                            <ul>
+                                <li>Sensor Azimutal: <span id="current-sensor-azimut">1</span></li>
+                                <li>Sensor Cenital: <span id="current-sensor-cenit">1</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Historial -->
+            <section id="history" class="content-section">
+                <h2><span data-icon="chartLine"></span> Historial de Sensores</h2>
+                <div class="card">
+                    <div class="filter-controls">
+                        <div class="form-group">
+                            <label for="sensor-select">Sensor</label>
+                            <select id="sensor-select" class="form-control">
+                                <option value="0">Cargando sensores...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date-select">Fecha</label>
+                            <select id="date-select" class="form-control">
+                                <option value="">Cargando fechas...</option>
+                            </select>
+                        </div>
+                        <button id="load-data" class="btn btn-primary">
+                            <span data-icon="sync"></span> Cargar Datos
+                        </button>
+                        <div id="data-status-message"></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sensor-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

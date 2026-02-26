@@ -1,0 +1,64 @@
+operatorset operadores {
+   defuz xfl.FuzzyMean();
+}
+
+type T_error [-2500.0,2500.0;256] {
+  fam[] xfl.sh_triangular(-500.0,-20.0,0.0,20.0,500.0);
+  ENG fam[0];
+  ENP fam[1];
+  EZ fam[2];
+  EPP fam[3];
+  EPG fam[4];
+}
+
+type T_Derror [-1500.0,1500.0;256] {
+  fam[] xfl.sh_triangular(-1000.0,-100.0,0.0,100.0,1000.0);
+  DNG fam[0];
+  DNP fam[1];
+  DZ fam[2];
+  DPP fam[3];
+  DPG fam[4];
+}
+
+type T_pwm [-100.0,100.0;256] {
+  RR xfl.singleton(-95.0);
+  RM xfl.singleton(-40.0);
+  RL xfl.singleton(-4.0);
+  STOP xfl.singleton(0.0);
+  DL xfl.singleton(4.0);
+  DM xfl.singleton(40.0);
+  DR xfl.singleton(95.0);
+}
+
+rulebase reglas (T_error Error, T_Derror Derror : T_pwm pwm) using operadores {
+  if(Error == ENG & Derror == DNG) -> pwm = RR;
+  if(Error == ENG & Derror == DNP) -> pwm = RR;
+  if(Error == ENG & Derror == DZ) -> pwm = RM;
+  if(Error == ENG & Derror == DPP) -> pwm = RM;
+  if(Error == ENG & Derror == DPG) -> pwm = STOP;
+  if(Error == ENP & Derror == DNG) -> pwm = RR;
+  if(Error == ENP & Derror == DNP) -> pwm = RM;
+  if(Error == ENP & Derror == DZ) -> pwm = RL;
+  if(Error == ENP & Derror == DPP) -> pwm = STOP;
+  if(Error == ENP & Derror == DPG) -> pwm = DL;
+  if(Error == EZ & Derror == DNG) -> pwm = RM;
+  if(Error == EZ & Derror == DNP) -> pwm = RL;
+  if(Error == EZ & Derror == DZ) -> pwm = STOP;
+  if(Error == EZ & Derror == DPP) -> pwm = DL;
+  if(Error == EZ & Derror == DPG) -> pwm = DM;
+  if(Error == EPP & Derror == DNG) -> pwm = RL;
+  if(Error == EPP & Derror == DNP) -> pwm = STOP;
+  if(Error == EPP & Derror == DZ) -> pwm = DL;
+  if(Error == EPP & Derror == DPP) -> pwm = DM;
+  if(Error == EPP & Derror == DPG) -> pwm = DR;
+  if(Error == EPG & Derror == DNG) -> pwm = STOP;
+  if(Error == EPG & Derror == DNP) -> pwm = DL;
+  if(Error == EPG & Derror == DZ) -> pwm = DM;
+  if(Error == EPG & Derror == DPP) -> pwm = DR;
+  if(Error == EPG & Derror == DPG) -> pwm = DR;
+}
+
+system (T_error Ecenit, T_Derror D_Ecenit, T_error Eazimut, T_Derror D_Eazimut : T_pwm PWM_cenit, T_pwm PWM_azimut) {
+  reglas(Ecenit, D_Ecenit : PWM_cenit);
+  reglas(Eazimut, D_Eazimut : PWM_azimut);
+ }
